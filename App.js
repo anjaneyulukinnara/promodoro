@@ -7,6 +7,7 @@
  */
 
 import React, { Fragment, Component } from 'react';
+import BackgroundTimer from 'react-native-background-timer';
 import {
   SafeAreaView,
   StyleSheet,
@@ -15,7 +16,8 @@ import {
   Text,
   StatusBar,
   ImageBackground,
-  TouchableOpacity
+  TouchableOpacity,
+  Vibration
 } from 'react-native';
 
 import {
@@ -38,24 +40,37 @@ export class App extends Component {
       this.setState({
         label: "STOP"
       })
-      this.interval = setInterval(() => {
+      this.interval = BackgroundTimer.setInterval(() => {
         const timer = this.state.timer - 1;
         let min = Math.floor(timer / 60);
         let secs = timer % 60;
+        if (min == 300) {
+          Vibration.vibrate(3000);
+        }
         if (secs < 10) {
           secs = '0' + secs;
         }
         if (secs == 0) {
           min--
         }
-        const timerLabel = `${min}:${secs}`;
-        this.setState({
-          timer,
-          timerLabel
-        })
+        if (min <= 0) {
+          Vibration.vibrate(3000);
+          BackgroundTimer.clearInterval(this.interval);
+          this.setState({
+            label: "START",
+            timer: 1800,
+            timerLabel: "30:00"
+          })
+        } else {
+          const timerLabel = `${min}:${secs}`;
+          this.setState({
+            timer,
+            timerLabel
+          })
+        }
       }, 1000)
     } else {
-      clearInterval(this.interval);
+      BackgroundTimer.clearInterval(this.interval);
       this.setState({
         label: "START",
         timer: 1800,
@@ -65,7 +80,7 @@ export class App extends Component {
     }
   }
   componentWillUnmount() {
-    clearInterval(this.interval);
+    BackgroundTimer.clearInterval(this.interval);
   }
   render() {
     return (
